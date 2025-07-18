@@ -8,7 +8,7 @@ data "aws_iam_policy_document" "aws_load_balancer_controller_assume_role_policy"
     condition {
       test     = "StringEquals"
       variable = "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub"
-      values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
+      values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller-${var.name}"]
     }
 
     principals {
@@ -20,7 +20,7 @@ data "aws_iam_policy_document" "aws_load_balancer_controller_assume_role_policy"
 
 resource "aws_iam_role" "aws_load_balancer_controller" {
   assume_role_policy = data.aws_iam_policy_document.aws_load_balancer_controller_assume_role_policy.json
-  name               = "aws-load-balancer-controller"
+  name               = "aws-load-balancer-controller-${var.name}"
 
   tags = {
     Name = "${local.tag_name} ALB"
@@ -28,7 +28,7 @@ resource "aws_iam_role" "aws_load_balancer_controller" {
 }
 
 resource "aws_iam_policy" "aws_load_balancer_controller" {
-  name        = "AWSLoadBalancerControllerIAMPolicy"
+  name        = "AWSLoadBalancerControllerIAMPolicy-${var.name}"
   description = "IAM policy for AWS Load Balancer Controller"
 
   policy = jsonencode({
@@ -286,7 +286,7 @@ resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller" {
 
 resource "kubernetes_service_account" "aws_load_balancer_controller" {
   metadata {
-    name      = "aws-load-balancer-controller"
+    name      = "aws-load-balancer-controller-${var.name}"
     namespace = "kube-system"
     annotations = {
       "eks.amazonaws.com/role-arn" = aws_iam_role.aws_load_balancer_controller.arn
@@ -295,7 +295,7 @@ resource "kubernetes_service_account" "aws_load_balancer_controller" {
 }
 
 resource "helm_release" "aws_load_balancer_controller" {
-  name       = "aws-load-balancer-controller"
+  name       = "aws-load-balancer-controller-${var.name}"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
@@ -313,7 +313,7 @@ resource "helm_release" "aws_load_balancer_controller" {
 
   set {
     name  = "serviceAccount.name"
-    value = "aws-load-balancer-controller"
+    value = "aws-load-balancer-controller-${var.name}"
   }
 
   set {
@@ -323,7 +323,7 @@ resource "helm_release" "aws_load_balancer_controller" {
 
   set {
     name  = "vpcId"
-    value = module.vpc.vpc_id
+    value = data.aws_vpc.existing.id
   }
 
   depends_on = [
