@@ -168,18 +168,18 @@ resource "aws_route_table_association" "private" {
 
 
 # Enable DNS settings on existing VPC (if needed)
-resource "aws_vpc_dhcp_options" "this" {
-  domain_name_servers = ["AmazonProvidedDNS"]
-
-  tags = {
-    Name = "${var.name}-vpc-dhcp-options"
-  }
-}
-
-resource "aws_vpc_dhcp_options_association" "this" {
-  vpc_id          = data.aws_vpc.existing.id
-  dhcp_options_id = aws_vpc_dhcp_options.this.id
-}
+# resource "aws_vpc_dhcp_options" "this" {
+#   domain_name_servers = ["AmazonProvidedDNS"]
+#
+#   tags = {
+#     Name = "${var.name}-vpc-dhcp-options"
+#   }
+# }
+#
+# resource "aws_vpc_dhcp_options_association" "this" {
+#   vpc_id          = data.aws_vpc.existing.id
+#   dhcp_options_id = aws_vpc_dhcp_options.this.id
+# }
 
 # Security group for VPC endpoints
 resource "aws_security_group" "vpc_endpoints" {
