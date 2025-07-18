@@ -3,18 +3,21 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  azs = slice(data.aws_availability_zones.available.names, 0, 3)
+  azs               = slice(data.aws_availability_zones.available.names, 0, 3)                                       # Limit to 3 AZs for simplicity
+  subnets_count     = tonumber(length(local.azs) * 2)                                                                        # Total number of subnets to create (3 private, 3 public)
+  newbits           = var.subnet_mask_length - tonumber(local.vpc_prefix_length)                                            # Calculate new bits for subnetting
+  vpc_prefix_length = tonumber(element(split("/", data.aws_vpc.existing.cidr_block), 1))                             # Extract the prefix length from the VPC CIDR
+  total_subnets     = pow(2, local.newbits)                                                                          # Calculate total subnets
+  last_indices      = [for i in range(local.total_subnets - local.subnets_count, local.total_subnets) : i]           # Get the last 6 indices for subnets
+  last_subnets      = [for i in local.last_indices : cidrsubnet(data.aws_vpc.existing.cidr_block, local.newbits, i)] # Generate the last 6 subnets based on the VPC CIDR and new bits
+  # Divide the last subnets in 2 parts, first for private and last 3 for public
+  private_subnets = slice(local.last_subnets, 0, length(local.azs))
+  public_subnets  = slice(local.last_subnets, length(local.azs), local.subnets_count)
 }
 
 # Data source to reference your existing VPC
 data "aws_vpc" "existing" {
-  # Option 1: Reference by VPC ID
-  id = var.vpc_id  # Replace with your actual VPC ID
-
-  # Option 2: Reference by tags (alternative)
-  # tags = {
-  #   Name = "${var.name}-vpc"
-  # }
+  id = var.vpc_id # Replace with your actual VPC ID
 }
 
 # Data source for existing Internet Gateway
@@ -33,12 +36,12 @@ resource "aws_subnet" "private" {
   count = length(local.azs)
 
   vpc_id            = data.aws_vpc.existing.id
-  cidr_block        = cidrsubnet(data.aws_vpc.existing.cidr_block, 4, 12 + count.index)
+  cidr_block        = local.private_subnets[count.index]
   availability_zone = local.azs[count.index]
 
   tags = merge(
     {
-      Name = "${var.name}-vpc-private-${local.azs[count.index]}"
+      Name                                = "${var.name}-vpc-private-${local.azs[count.index]}"
       "kubernetes.io/role/internal-elb"   = "1"
       "kubernetes.io/cluster/${var.name}" = "shared"
     },
@@ -53,13 +56,13 @@ resource "aws_subnet" "public" {
   count = length(local.azs)
 
   vpc_id                  = data.aws_vpc.existing.id
-  cidr_block              = cidrsubnet(data.aws_vpc.existing.cidr_block, 4, 8 + count.index)
+  cidr_block              = local.public_subnets[count.index]
   availability_zone       = local.azs[count.index]
   map_public_ip_on_launch = true
 
   tags = merge(
     {
-      Name = "${var.name}-vpc-public-${local.azs[count.index]}"
+      Name                                = "${var.name}-vpc-public-${local.azs[count.index]}"
       "kubernetes.io/role/elb"            = "1"
       "kubernetes.io/cluster/${var.name}" = "shared"
     },
@@ -205,11 +208,11 @@ resource "aws_security_group" "vpc_endpoints" {
 
 # VPC Endpoints for AWS services
 resource "aws_vpc_endpoint" "sts" {
-  vpc_id             = data.aws_vpc.existing.id
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.sts"
-  vpc_endpoint_type  = "Interface"
-  subnet_ids         = aws_subnet.private[*].id
-  security_group_ids = [aws_security_group.vpc_endpoints.id]
+  vpc_id              = data.aws_vpc.existing.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.sts"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.private[*].id
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
   private_dns_enabled = true
 
   tags = {

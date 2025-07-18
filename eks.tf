@@ -16,9 +16,9 @@ resource "aws_eks_cluster" "langfuse" {
 
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-  # access_config {
-  #   authentication_mode = "API_AND_CONFIG_MAP"
-  # }
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
 
   tags = {
     Name = local.tag_name

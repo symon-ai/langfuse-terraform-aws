@@ -9,12 +9,6 @@ variable "domain" {
   type        = string
 }
 
-variable "vpc_cidr" {
-  description = "CIDR block for VPC"
-  type        = string
-  default     = "10.0.0.0/16"
-}
-
 variable "kubernetes_version" {
   description = "Kubernetes version to use for the EKS cluster"
   type        = string
@@ -155,5 +149,9 @@ variable "redis_multi_az" {
 variable "vpc_id" {
   description = "ID of the existing VPC to use"
   type        = string
-  default     = ""
+}
+
+variable "subnet_mask_length" {
+  type    = number
+  description = "Subnet mask length for the VPC subnets"
 }
