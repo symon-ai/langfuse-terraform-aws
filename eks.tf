@@ -27,7 +27,10 @@ resource "aws_eks_cluster" "langfuse" {
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_policy,
     aws_iam_role_policy_attachment.eks_service_policy,
-    aws_cloudwatch_log_group.eks
+    aws_cloudwatch_log_group.eks,
+    aws_subnet.private,
+    aws_subnet.public,
+    aws_acm_certificate.cert,
   ]
 }
 
