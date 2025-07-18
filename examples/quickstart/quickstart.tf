@@ -1,7 +1,7 @@
 module "langfuse" {
   source = "../.."
 
-  domain = "langfuse-test.wisepipe.com"
+  domain = "langfuse-test.example.com"
 
   # Optional use a different name for your installation
   # e.g. when using the module multiple times on the same AWS account
