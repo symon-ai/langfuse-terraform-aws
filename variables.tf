@@ -155,3 +155,9 @@ variable "subnet_mask_length" {
   type    = number
   description = "Subnet mask length for the VPC subnets"
 }
+
+variable "eks_endpoint_public_access" {
+  description = "Whether the EKS cluster endpoint is publicly accessible"
+  type        = bool
+  default     = true
+}

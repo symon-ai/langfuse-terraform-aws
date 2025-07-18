@@ -10,15 +10,15 @@ resource "aws_eks_cluster" "langfuse" {
   vpc_config {
     subnet_ids              = aws_subnet.private[*].id
     endpoint_private_access = true
-    endpoint_public_access  = true
+    endpoint_public_access  = var.eks_endpoint_public_access
     security_group_ids      = [aws_security_group.eks.id]
   }
 
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-  access_config {
-    authentication_mode = "API_AND_CONFIG_MAP"
-  }
+  # access_config {
+  #   authentication_mode = "API_AND_CONFIG_MAP"
+  # }
 
   tags = {
     Name = local.tag_name

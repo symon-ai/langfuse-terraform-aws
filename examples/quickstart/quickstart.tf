@@ -12,7 +12,8 @@ module "langfuse" {
 
   # Optional: Configure the VPC
   # vpc_cidr               = "10.0.0.0/16"
-  vpc_id                = "vpc-0a3e0e806bc1768ef" # Use
+  vpc_id                 = "vpc-0a3e0e806bc1768ef" # Use
+  subnet_mask_length     = 20 # Subnet mask length for the VPC subnets
   use_single_nat_gateway = false # Using a single NAT gateway decreases costs, but is less resilient
 
   # Optional: Configure the Kubernetes cluster
