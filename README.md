@@ -1,5 +1,8 @@
 ![GitHub Banner](https://github.com/langfuse/langfuse-k8s/assets/2834609/2982b65d-d0bc-4954-82ff-af8da3a4fac8)
 
+
+:warning: **This modules is a custom implementation of Langfuse on AWS using Terraform. It is not an official module from Langfuse.** :warning:
+
 # AWS Langfuse Terraform module
 
 > This module is a pre-release version and its interface may change.
